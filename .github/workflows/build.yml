@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,9 +25,22 @@ jobs:
           gradle-version: "8.11.1"
 
       - name: Build
-        run: gradle assembleDebug assembleRelease
+        run: |
+          gradle assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk minimal.apk
 
       - uses: actions/upload-artifact@v7
         with:
           name: minimal-launcher
-          path: app/build/outputs/apk/**/*.apk
+          path: minimal.apk
+
+      # Stable download link: /releases/latest/download/minimal.apk
+      - name: Publish release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: latest
+          name: Minimal (latest build)
+          body: "Built from ${{ github.sha }}. Download minimal.apk and open it on your phone."
+          files: minimal.apk
+          make_latest: true
