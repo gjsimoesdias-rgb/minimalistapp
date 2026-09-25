@@ -5,6 +5,7 @@ import android.app.Activity
 import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.provider.AlarmClock
 import android.provider.MediaStore
@@ -27,6 +28,11 @@ object SystemActions {
 
     fun openAccessibilitySettings(context: Context) =
         AppRepository.startSafely(context, Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+
+    fun openOwnAppInfo(context: Context) = AppRepository.startSafely(
+        context,
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)),
+    )
 
     @SuppressLint("WrongConstant")
     fun expandNotifications(context: Context) {

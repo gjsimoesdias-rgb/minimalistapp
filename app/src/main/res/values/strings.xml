@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Minimal</string>
+    <string name="focus_lock_description">Powers the focus lock. While a lock is running, it closes screens that would uninstall Minimal, switch to another launcher, or turn this service off. It reads nothing else and sends nothing anywhere.</string>
 </resources>

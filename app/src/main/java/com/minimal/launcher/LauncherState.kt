@@ -40,6 +40,15 @@ class LauncherState(private val activity: ComponentActivity) {
         private set
     var screenTimeMs by mutableStateOf<Long?>(null)
         private set
+    var lockUntil by mutableStateOf(prefs.lockUntil)
+        private set
+    var lockMinutes by mutableIntStateOf(prefs.lockMinutes)
+        private set
+    var lockServiceEnabled by mutableStateOf(FocusLockService.isEnabled(activity))
+        private set
+
+    /** Re-evaluated on every resume (via [refresh]), so an expired lock clears itself. */
+    val isLocked: Boolean get() = lockUntil > System.currentTimeMillis()
 
     val favoriteApps: List<AppInfo>
         get() = favorites.mapNotNull { key -> apps.firstOrNull { it.key == key } }
@@ -59,6 +68,11 @@ class LauncherState(private val activity: ComponentActivity) {
 
     fun refresh() {
         resumeCount++
+        lockServiceEnabled = FocusLockService.isEnabled(activity)
+        if (lockUntil != 0L && !isLocked) {
+            lockUntil = 0L
+            prefs.lockUntil = 0L
+        }
         activity.lifecycleScope.launch {
             val loaded = withContext(Dispatchers.IO) { AppRepository.loadApps(activity) }
             apps = loaded
@@ -144,6 +158,24 @@ class LauncherState(private val activity: ComponentActivity) {
         refresh()
     }
 
+    fun cycleLockMinutes() {
+        lockMinutes = LOCK_OPTIONS[(LOCK_OPTIONS.indexOf(lockMinutes) + 1) % LOCK_OPTIONS.size]
+        prefs.lockMinutes = lockMinutes
+    }
+
+    /** Starts the focus lock. Returns false (and opens accessibility settings) if the service is off. */
+    fun startLock(): Boolean {
+        if (!FocusLockService.isEnabled(activity)) {
+            toast("Turn on Minimal in accessibility first")
+            SystemActions.openAccessibilitySettings(activity)
+            return false
+        }
+        lockUntil = System.currentTimeMillis() + lockMinutes * 60_000L
+        prefs.lockUntil = lockUntil
+        goHome()
+        return true
+    }
+
     /** Forget uninstalled apps so they don't take up home slots. */
     private fun pruneMissing(loaded: List<AppInfo>) {
         if (loaded.isEmpty()) return
@@ -169,6 +201,7 @@ class LauncherState(private val activity: ComponentActivity) {
 
     private companion object {
         const val MAX_FAVORITES = 8
+        val LOCK_OPTIONS = listOf(30, 60, 120, 240, 480, 1440)
         val DIACRITICS = Regex("\\p{Mn}+")
     }
 }

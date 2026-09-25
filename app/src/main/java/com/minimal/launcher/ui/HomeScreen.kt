@@ -65,6 +65,7 @@ fun HomeScreen(state: LauncherState) {
         val status = listOfNotNull(
             battery?.let { "$it%" },
             state.screenTimeMs?.let { "${ScreenTime.format(it)} today" },
+            if (state.isLocked) "locked until ${formatLockEnd(context, state.lockUntil)}" else null,
         ).joinToString("   ·   ")
         if (status.isNotEmpty()) {
             Text(status, color = Muted, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp))

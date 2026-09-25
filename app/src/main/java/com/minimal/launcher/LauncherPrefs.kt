@@ -31,7 +31,20 @@ class LauncherPrefs(context: Context) {
         get() = prefs.getBoolean(KEY_SCREEN_TIME, false)
         set(value) = prefs.edit().putBoolean(KEY_SCREEN_TIME, value).apply()
 
+    /** Epoch millis until which the focus lock is active; 0 when off. */
+    var lockUntil: Long
+        get() = prefs.getLong(KEY_LOCK_UNTIL, 0L)
+        set(value) = prefs.edit().putLong(KEY_LOCK_UNTIL, value).apply()
+
+    var lockMinutes: Int
+        get() = prefs.getInt(KEY_LOCK_MINUTES, 60)
+        set(value) = prefs.edit().putInt(KEY_LOCK_MINUTES, value).apply()
+
+    fun isLocked(): Boolean = lockUntil > System.currentTimeMillis()
+
     private companion object {
+        const val KEY_LOCK_UNTIL = "lock_until"
+        const val KEY_LOCK_MINUTES = "lock_minutes"
         const val KEY_FAVORITES = "favorites"
         const val KEY_HIDDEN = "hidden"
         const val KEY_MINDFUL = "mindful"
